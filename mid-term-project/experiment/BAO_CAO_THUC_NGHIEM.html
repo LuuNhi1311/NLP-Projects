@@ -1,0 +1,391 @@
+<title>Thực nghiệm NER cổ văn 文言文 — Báo cáo cho team</title>
+<style>
+  :root{
+    --paper:#F1F2EE; --surface:#FBFBF8; --raised:#FFFFFF;
+    --ink:#23211C; --muted:#6C6860; --faint:#928D83;
+    --seal:#B23A2C; --seal-soft:#B23A2C1a;
+    --celadon:#3B7A6E; --celadon-soft:#3B7A6E1a;
+    --amber:#9C6A15;
+    --line:#DBD8D0; --line-strong:#C9C5BB;
+    --shadow:0 1px 2px rgba(40,36,28,.05), 0 8px 24px rgba(40,36,28,.05);
+    --serif:Georgia,"Songti SC","STSong","Noto Serif CJK SC","SimSun",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Microsoft YaHei","PingFang SC",sans-serif;
+    --han:"Songti SC","STSong","Noto Serif CJK SC","SimSun",Georgia,serif;
+    --mono:"Cascadia Code","SF Mono",Consolas,"Liberation Mono",monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#16150F; --surface:#1E1C16; --raised:#252219;
+      --ink:#ECE7DB; --muted:#A29C8E; --faint:#7C766A;
+      --seal:#E27561; --seal-soft:#E275611f;
+      --celadon:#74B7A8; --celadon-soft:#74B7A81f;
+      --amber:#D6A24C;
+      --line:#332F26; --line-strong:#433D31;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#F1F2EE; --surface:#FBFBF8; --raised:#FFFFFF;
+    --ink:#23211C; --muted:#6C6860; --faint:#928D83;
+    --seal:#B23A2C; --seal-soft:#B23A2C1a; --celadon:#3B7A6E; --celadon-soft:#3B7A6E1a;
+    --amber:#9C6A15; --line:#DBD8D0; --line-strong:#C9C5BB;
+    --shadow:0 1px 2px rgba(40,36,28,.05), 0 8px 24px rgba(40,36,28,.05);
+  }
+  :root[data-theme="dark"]{
+    --paper:#16150F; --surface:#1E1C16; --raised:#252219;
+    --ink:#ECE7DB; --muted:#A29C8E; --faint:#7C766A;
+    --seal:#E27561; --seal-soft:#E275611f; --celadon:#74B7A8; --celadon-soft:#74B7A81f;
+    --amber:#D6A24C; --line:#332F26; --line-strong:#433D31;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.28);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);
+    line-height:1.65;font-size:16px;-webkit-font-smoothing:antialiased;margin:0}
+  .wrap{max-width:912px;margin:0 auto;padding:clamp(20px,4vw,56px) clamp(16px,4vw,40px) 96px}
+  ::selection{background:var(--seal-soft)}
+
+  /* ---------- masthead ---------- */
+  .eyebrow{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--seal);font-weight:700;display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:26px;height:2px;background:var(--seal);display:inline-block}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(28px,5vw,42px);
+    line-height:1.12;letter-spacing:-.01em;text-wrap:balance;margin:.5rem 0 .4rem}
+  h1 .han{font-family:var(--han);font-weight:600}
+  .lede{font-size:clamp(16px,2.4vw,18.5px);color:var(--muted);max-width:60ch;margin:.2rem 0 0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 10px;margin-top:22px;font-size:13px}
+  .tag{border:1px solid var(--line-strong);border-radius:999px;padding:4px 12px;
+    color:var(--muted);background:var(--surface);white-space:nowrap}
+  .tag b{color:var(--ink);font-weight:600}
+  .rule{height:1px;background:var(--line);border:0;margin:34px 0}
+
+  /* ---------- TL;DR stat tiles ---------- */
+  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:8px 0 4px}
+  @media(max-width:560px){.tiles{grid-template-columns:1fr}}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:18px 18px 16px;position:relative;box-shadow:var(--shadow)}
+  .tile.win{border-color:var(--seal);background:linear-gradient(180deg,var(--seal-soft),transparent 70%)}
+  .tile .lab{font-size:12.5px;color:var(--muted);letter-spacing:.02em;display:flex;justify-content:space-between;align-items:center}
+  .tile .val{font-family:var(--serif);font-size:38px;font-weight:600;line-height:1;
+    margin-top:12px;font-variant-numeric:tabular-nums}
+  .tile.win .val{color:var(--seal)}
+  .tile .sub{font-size:12.5px;color:var(--faint);margin-top:6px}
+  .seal-mark{font-family:var(--han);font-size:12px;color:#fff;background:var(--seal);
+    border-radius:5px;padding:2px 6px;letter-spacing:.05em;font-weight:600}
+  .bar{height:6px;border-radius:99px;background:var(--line);margin-top:14px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--celadon)}
+  .tile.win .bar>i{background:var(--seal)}
+
+  /* ---------- sections ---------- */
+  section{margin-top:52px}
+  h2{font-family:var(--serif);font-weight:600;font-size:23px;letter-spacing:-.005em;
+    margin:0 0 4px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .no{font-size:13px;font-weight:700;color:var(--seal);font-family:var(--mono);
+    letter-spacing:0;flex:none;transform:translateY(-2px)}
+  h3{font-size:15px;font-weight:700;letter-spacing:.01em;margin:26px 0 10px;color:var(--ink)}
+  .sec-intro{color:var(--muted);max-width:66ch;margin:.2rem 0 0}
+  p{margin:.7rem 0}
+  a{color:var(--celadon);text-underline-offset:3px;text-decoration-color:var(--line-strong)}
+  strong{font-weight:670}
+  .han{font-family:var(--han)}
+
+  /* ---------- tables ---------- */
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;
+    background:var(--surface);box-shadow:var(--shadow);margin:16px 0}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+  th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+    font-weight:700;background:var(--surface);position:sticky;top:0;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:0}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:13px}
+  tr.win{background:var(--seal-soft)}
+  tr.win td:first-child{box-shadow:inset 3px 0 0 var(--seal)}
+  tr.win td{font-weight:600}
+  .code-cell{font-family:var(--han);font-size:15px}
+  .muted{color:var(--muted)}
+  .chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;
+    padding:2px 8px;border-radius:6px;white-space:nowrap;font-family:var(--mono)}
+  .chip.mono{font-family:var(--sans)}
+  .badge{font-family:var(--sans);font-weight:700;font-size:11px;padding:2px 7px;border-radius:6px;letter-spacing:.02em}
+  .b-A{background:var(--celadon-soft);color:var(--celadon)}
+  .b-D{background:var(--seal-soft);color:var(--seal)}
+
+  /* ---------- callout (§4) ---------- */
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--seal);
+    border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);margin:18px 0}
+  .callout .q{font-family:var(--serif);font-size:17px;color:var(--ink);margin:0 0 2px}
+  .grp{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+  @media(max-width:620px){.grp{grid-template-columns:1fr}}
+  .grp .box{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--raised)}
+  .grp .box h4{margin:0 0 8px;font-size:13px;letter-spacing:.02em}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:99px;margin-right:7px;vertical-align:baseline}
+  .dot.g{background:var(--celadon)} .dot.y{background:var(--amber)}
+  .grp .box p{font-size:13.5px;margin:.45rem 0;color:var(--muted)}
+  .grp .box b{color:var(--ink)}
+
+  /* ---------- qualitative cards ---------- */
+  .qcard{border:1px solid var(--line);border-radius:14px;background:var(--surface);
+    padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+  .qsent{font-family:var(--han);font-size:20px;line-height:1.5;letter-spacing:.02em;
+    padding-bottom:14px;margin-bottom:6px;border-bottom:1px dashed var(--line-strong)}
+  .qrow{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:baseline;
+    padding:9px 0;border-bottom:1px solid var(--line)}
+  .qrow:last-child{border-bottom:0}
+  .qrow .who{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .verdict{font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px}
+  .v-ok{background:var(--celadon-soft);color:var(--celadon)}
+  .v-bad{background:var(--seal-soft);color:var(--seal)}
+  .ents{display:flex;flex-wrap:wrap;gap:6px}
+  .ent{font-family:var(--han);font-size:14px;border:1px solid var(--line-strong);
+    border-radius:7px;padding:2px 8px;background:var(--raised);white-space:nowrap}
+  .ent small{font-family:var(--sans);font-size:10px;color:var(--faint);margin-left:5px;letter-spacing:.03em}
+  .ent.ok{border-color:var(--celadon);color:var(--ink)}
+  .ent.bad{border-color:var(--seal);color:var(--seal)}
+  .ent.bad small{color:var(--seal)}
+
+  /* ---------- misc ---------- */
+  ul.clean{list-style:none;padding:0;margin:12px 0}
+  ul.clean li{position:relative;padding:6px 0 6px 26px;color:var(--muted)}
+  ul.clean li::before{content:"";position:absolute;left:4px;top:15px;width:7px;height:7px;
+    border-radius:2px;background:var(--celadon);transform:rotate(45deg)}
+  ul.clean li b{color:var(--ink)}
+  .steps{counter-reset:s;list-style:none;padding:0;margin:14px 0;display:grid;gap:10px}
+  .steps li{counter-increment:s;position:relative;padding:12px 16px 12px 52px;
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;color:var(--muted)}
+  .steps li::before{content:counter(s);position:absolute;left:14px;top:11px;width:24px;height:24px;
+    display:grid;place-items:center;border-radius:7px;background:var(--seal);color:#fff;
+    font-weight:700;font-size:13px;font-family:var(--mono)}
+  .steps li b{color:var(--ink)}
+  pre{background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+    overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--ink);margin:14px 0}
+  pre .c{color:var(--faint)}
+  .note{font-size:13.5px;color:var(--muted);background:var(--celadon-soft);border-radius:8px;
+    padding:10px 14px;border:1px solid var(--line);margin:12px 0}
+  .foot{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);
+    font-size:13px;color:var(--faint);display:flex;flex-wrap:wrap;gap:6px 18px}
+  .foot a{color:var(--muted)}
+  .warn{color:var(--amber);font-weight:600}
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Đồ án HCH · Thực nghiệm tập sample</div>
+    <h1>Tách câu &amp; NER cho văn ngôn <span class="han">文言文</span> — công cụ nào tốt hơn cho chữ Hán cổ?</h1>
+    <p class="lede">Báo cáo proof-of-concept để cả team đọc &amp; chốt phương pháp: so sánh 5 công cụ NER trên tập sample <span class="han">元史</span>, kèm cách đánh giá khi <em>chưa có ground truth đầy đủ</em>.</p>
+    <div class="meta">
+      <span class="tag">Sample: <b class="han">元史 卷001 + 卷002</b></span>
+      <span class="tag"><b>597</b> câu · <b class="han">文言文</b> phồn thể</span>
+      <span class="tag">Bộ nhãn: <b>PER LOC ORG TITLE TME NUM</b></span>
+      <span class="tag">Cập nhật: <b>2026-07-06</b></span>
+    </div>
+  </header>
+
+  <hr class="rule">
+
+  <!-- TL;DR -->
+  <div class="tiles">
+    <div class="tile">
+      <div class="lab">Ⓐ Gazetteer + regex <span class="muted">luật</span></div>
+      <div class="val">0.417</div>
+      <div class="sub">micro-F1 · baseline</div>
+      <div class="bar"><i style="width:54%"></i></div>
+    </div>
+    <div class="tile">
+      <div class="lab">Ⓓ Classical model <span class="muted">cổ văn</span></div>
+      <div class="val">0.558</div>
+      <div class="sub">micro-F1 · recall 0.80</div>
+      <div class="bar"><i style="width:72%"></i></div>
+    </div>
+    <div class="tile win">
+      <div class="lab">Hybrid Ⓓ+Ⓐ <span class="seal-mark">選</span></div>
+      <div class="val">0.774</div>
+      <div class="sub">micro-F1 · đề xuất chốt</div>
+      <div class="bar"><i style="width:100%"></i></div>
+    </div>
+  </div>
+  <p class="note"><span class="warn">⚠ Đọc kỹ:</span> các số F1 trên đo bằng seqeval nhưng chỉ trên <b>gold 7 câu</b> → <b>mang tính minh hoạ</b>, chưa phải kết luận độ chính xác cuối cùng. Lý do &amp; cách đánh giá đầy đủ ở <a href="#eval">§4</a>.</p>
+
+  <!-- §1 -->
+  <section id="muc-tieu">
+    <h2><span class="no">§1</span> Mục tiêu &amp; đã xuất file chưa?</h2>
+    <p class="sec-intro">Bước proof-of-concept: chạy thử pipeline <span class="han">clean → tách câu → NER</span> trên sample nhỏ để <b>so sánh công cụ</b> và <b>chốt phương pháp</b> trước bản final. Mỗi tác vụ chạy ≥2 phương pháp.</p>
+    <div class="note"><b>File bắt buộc theo OutputRequirement đã xuất đủ ✓</b> cho cả 2 chương, đúng schema — chi tiết ở §2.</div>
+  </section>
+
+  <!-- §2 -->
+  <section id="du-lieu">
+    <h2><span class="no">§2</span> Dữ liệu &amp; file đã xuất</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Chương</th><th class="num">Đoạn</th><th class="num">Ký tự</th><th class="num">Câu tách</th><th class="num">NER (gazetteer)</th><th class="num">NER (hybrid)</th></tr></thead>
+        <tbody>
+          <tr><td class="han">HCH_006_001 (卷1)</td><td class="num">131</td><td class="num">10 695</td><td class="num">404</td><td class="num">700</td><td class="num">1 438</td></tr>
+          <tr><td class="han">HCH_006_002 (卷2)</td><td class="num">90</td><td class="num">3 901</td><td class="num">193</td><td class="num">361</td><td class="num">649</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>File / thư mục con</th><th>Nội dung</th><th>Vai trò</th></tr></thead>
+        <tbody>
+          <tr><td class="code-cell">…_seg.tsv</td><td>Tách câu — <code>id ⇥ câu</code></td><td><span class="badge b-A">bắt buộc ✓</span></td></tr>
+          <tr><td class="code-cell">…_ner.json</td><td>NER canonical, 6 nhãn</td><td><span class="badge b-A">bắt buộc ✓</span></td></tr>
+          <tr><td class="code-cell">…_ner.hybrid.json</td><td>NER bằng Hybrid Ⓓ+Ⓐ (bản đề xuất)</td><td class="muted">biến thể so sánh</td></tr>
+          <tr><td class="code-cell">…_ner.model.json</td><td>NER bằng BERT</td><td class="muted">đối chứng</td></tr>
+          <tr><td class="code-cell">…_seg.stanza.tsv</td><td>Tách câu bằng Stanza</td><td class="muted">đối chứng</td></tr>
+          <tr><td class="code-cell">…_annotations.txt</td><td>Chú giải biên tập <span class="han">〈…〉</span> tách riêng</td><td class="muted">giữ lại, không mất</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- §3 -->
+  <section id="phuong-phap">
+    <h2><span class="no">§3</span> Các phương pháp đưa vào so sánh</h2>
+    <h3>Tách câu</h3>
+    <ul class="clean">
+      <li><b>① Rule-based (regex)</b> — cắt tại <span class="han">。！？</span>, nhận biết ngoặc thoại <span class="han">「」</span>. → <b>chốt dùng</b> (text đã có sẵn dấu câu).</li>
+      <li><b>② Stanza <span class="han">lzh</span></b> — cắt vụn hơn ~2–3× (mức cụm/mệnh đề), không khớp format <code>_seg.tsv</code>. Giữ làm đối chứng.</li>
+    </ul>
+    <h3>NER — 5 công cụ</h3>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Mã</th><th>Công cụ</th><th>Loại</th><th>Cổ văn native?</th><th>OpenCC</th></tr></thead>
+        <tbody>
+          <tr><td><b>Ⓐ</b></td><td>Gazetteer + regex</td><td>luật / từ điển</td><td class="muted">—</td><td class="muted">không</td></tr>
+          <tr><td><b>Ⓑ</b></td><td>BERT CLUENER</td><td>TQ hiện đại <b>giản thể</b></td><td class="muted">✗</td><td><span class="warn">bắt buộc</span></td></tr>
+          <tr><td><b>Ⓒ</b></td><td>ckiplab BERT NER</td><td>TQ hiện đại <b>phồn thể</b></td><td class="muted">✗</td><td class="muted">không</td></tr>
+          <tr class="win"><td><b>Ⓓ</b></td><td><span class="han">roberta-classical-chinese</span> UPOS→map</td><td><b>CỔ VĂN native</b></td><td>✓</td><td>không</td></tr>
+          <tr><td><b>Ⓔ</b></td><td><span class="han">ethanyt/guwen-ner</span></td><td>CỔ VĂN (chỉ dò danh từ riêng)</td><td>✓</td><td class="muted">không</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- §4 EVALUATION -->
+  <section id="eval">
+    <h2><span class="no">§4</span> Đánh giá độ chính xác khi <span class="han">chưa</span> có ground truth</h2>
+    <p class="sec-intro">Phần trả lời trực tiếp câu hỏi: <em>“không có file ground truth thì đo bằng gì?”</em></p>
+    <div class="callout">
+      <p class="q">Sự thật cần nói rõ với team</p>
+      <p class="muted" style="margin:0">Để tính <b style="color:var(--ink)">độ chính xác thật</b> (Precision/Recall/F1) thì <b style="color:var(--ink)">bắt buộc có gold</b> — tập câu con người gán tay làm chuẩn. Hiện nhóm mới có <b style="color:var(--ink)">7 câu</b> gán thử → thực nghiệm đo bằng <b style="color:var(--ink)">4 cách</b>, chia 2 nhóm:</p>
+      <div class="grp">
+        <div class="box">
+          <h4><span class="dot g"></span>Nhóm A — CÓ chuẩn (ra P/R/F1 thật)</h4>
+          <p><b>(1) seqeval trên gold 7 câu.</b> Chỗ <b>duy nhất</b> tính được P/R/F1 thật, so khớp span (vị trí + nhãn). <b>Giới hạn:</b> chỉ 15 thực thể / 3 nhãn (PER,TME,LOC) → chỉ minh hoạ cơ chế.</p>
+        </div>
+        <div class="box">
+          <h4><span class="dot y"></span>Nhóm B — KHÔNG cần chuẩn (so sánh gián tiếp)</h4>
+          <p><b>(2) Coverage</b> — đếm thực thể/nhãn = proxy cho <b>recall</b>. Không đo precision → “nhiều hơn ≠ tốt hơn”.</p>
+          <p><b>(3) Đồng thuận</b> — 2 công cụ độc lập cùng khớp span ⇒ span đáng tin (silver).</p>
+          <p><b>(4) Định tính</b> — người soi tay → nguồn phán xét “ai đúng” chính hiện nay.</p>
+        </div>
+      </div>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Muốn biết…</th><th>Đo được chưa?</th><th>Bằng cách nào</th></tr></thead>
+        <tbody>
+          <tr><td>Xu hướng recall (tìm nhiều/ít)</td><td><span class="chip mono" style="color:var(--celadon)">✓ tương đối</span></td><td class="muted">coverage (2)</td></tr>
+          <tr><td>Span nào đáng tin</td><td><span class="chip mono" style="color:var(--celadon)">✓ tương đối</span></td><td class="muted">agreement (3)</td></tr>
+          <tr><td>Công cụ nào đúng ở ca cụ thể</td><td><span class="chip mono" style="color:var(--celadon)">✓ định tính</span></td><td class="muted">soi tay (4)</td></tr>
+          <tr class="win"><td><b>Xếp hạng độ chính xác CHÍNH THỨC</b></td><td><span class="chip mono" style="color:var(--seal)">✗ chưa</span></td><td><b>cần gold 300–500 câu</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>➡️ Muốn trả lời dứt khoát <b>“phương pháp của ai tốt hơn”</b> thì phải xây <b>gold set 300–500 câu</b> (chính là <b>WP3</b>). Máy đánh giá đã dựng sẵn — <b>chỉ cần thay file gold lớn vào là ra kết quả</b>, không phải viết lại code.</p>
+  </section>
+
+  <!-- §5 RESULTS -->
+  <section id="ket-qua">
+    <h2><span class="no">§5</span> Kết quả thực nghiệm</h2>
+
+    <h3>5.1 — seqeval trên gold 7 câu (P/R/F1 thật · minh hoạ)</h3>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>NER</th><th class="num">micro-P</th><th class="num">micro-R</th><th class="num">micro-F1</th><th>Ghi chú</th></tr></thead>
+        <tbody>
+          <tr><td>Ⓐ rule</td><td class="num">0.556</td><td class="num">0.333</td><td class="num">0.417</td><td class="muted">precision khá, recall thấp (sót tên ngoài từ điển)</td></tr>
+          <tr><td>Ⓑ cluener</td><td class="num">0.500</td><td class="num">0.267</td><td class="num">0.348</td><td class="muted">cần OpenCC, sót họ <span class="han">耶律…</span></td></tr>
+          <tr><td>Ⓒ ckip</td><td class="num">0.000</td><td class="num">0.000</td><td class="num">0.000</td><td class="warn">vỡ vụn từng ký tự — fail trên <span class="han">文言文</span></td></tr>
+          <tr><td>Ⓓ classical</td><td class="num">0.429</td><td class="num">0.800</td><td class="num">0.558</td><td class="muted">recall cao nhất; PER &amp; LOC F1=1.0; TME cắt vụn kéo xuống</td></tr>
+          <tr class="win"><td>Hybrid Ⓓ+Ⓐ</td><td class="num">0.750</td><td class="num">0.800</td><td class="num">0.774</td><td>tốt nhất — recall của Ⓓ + span sạch của Ⓐ</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>5.2 — Coverage &amp; đồng thuận trên toàn tập (597 câu · không gold)</h3>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Công cụ</th><th class="num">Tổng</th><th class="num">PER</th><th class="num">LOC</th><th class="num">ORG</th><th class="num">TITLE</th><th class="num">TME</th><th class="num">NUM</th><th class="num">khớp-khít Ⓐ</th></tr></thead>
+        <tbody>
+          <tr><td>Ⓐ rule</td><td class="num">1061</td><td class="num">222</td><td class="num">327</td><td class="num">47</td><td class="num">122</td><td class="num">168</td><td class="num">175</td><td class="num muted">—</td></tr>
+          <tr><td>Ⓑ cluener</td><td class="num">1127</td><td class="num">542</td><td class="num">466</td><td class="num">9</td><td class="num">110</td><td class="num" style="color:var(--seal)">0</td><td class="num" style="color:var(--seal)">0</td><td class="num">231</td></tr>
+          <tr><td>Ⓒ ckip</td><td class="num">2386</td><td class="num">1031</td><td class="num">719</td><td class="num">85</td><td class="num" style="color:var(--seal)">0</td><td class="num">390</td><td class="num">161</td><td class="num">88</td></tr>
+          <tr class="win"><td>Ⓓ classical</td><td class="num">2420</td><td class="num">886</td><td class="num">733</td><td class="num muted">0</td><td class="num muted">0</td><td class="num">423</td><td class="num">378</td><td class="num">371</td></tr>
+          <tr><td>Ⓔ guwen-ner</td><td class="num">1821</td><td colspan="6" class="muted">chỉ “danh từ riêng”, không phân loại nhãn</td><td class="num muted">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:14px">Đọc bảng: Ⓑ/Ⓓ <b>không có TME/NUM</b> (=0) → thiếu nhãn. Ⓒ số lớn nhưng chủ yếu <b>vỡ vụn</b> (xem 5.3). Ⓓ đồng thuận với Ⓐ <b>cao nhất (371)</b> → model cổ văn &amp; luật xác nhận lẫn nhau nhiều nhất.</p>
+
+    <h3>5.3 — Định tính: chỗ thấy rõ ai đúng / sai</h3>
+
+    <div class="qcard">
+      <div class="qsent">以耶律楚材為中書令，粘合重山為左丞相，鎮海為右丞相。</div>
+      <div class="qrow"><div class="who">Ⓐ rule <span class="verdict v-bad">sai</span></div>
+        <div class="ents"><span class="ent bad">粘合重山<small>LOC</small></span><span class="ent bad">鎮海<small>LOC</small></span><span class="ent muted" style="border-style:dashed">sót 耶律楚材</span></div></div>
+      <div class="qrow"><div class="who">Ⓒ ckip <span class="verdict v-bad">vụn</span></div>
+        <div class="ents"><span class="ent bad">耶律楚<small>PER</small></span><span class="ent bad">材<small>PER</small></span><span class="ent bad">粘合重<small>PER</small></span><span class="ent bad">山<small>PER</small></span></div></div>
+      <div class="qrow"><div class="who">Ⓓ classical <span class="verdict v-ok">đúng</span></div>
+        <div class="ents"><span class="ent ok">耶律楚材<small>PER</small></span><span class="ent ok">粘合重山<small>PER</small></span><span class="ent ok">鎮海<small>PER</small></span></div></div>
+      <div class="qrow"><div class="who">Hybrid <span class="verdict v-ok">đủ nhãn</span></div>
+        <div class="ents"><span class="ent ok">耶律楚材<small>PER·Ⓓ</small></span><span class="ent ok">中書令<small>TITLE·Ⓐ</small></span><span class="ent ok">粘合重山<small>PER·Ⓓ</small></span><span class="ent ok">左丞相<small>TITLE·Ⓐ</small></span><span class="ent ok">鎮海<small>PER·Ⓓ</small></span><span class="ent ok">右丞相<small>TITLE·Ⓐ</small></span></div></div>
+    </div>
+
+    <div class="qcard">
+      <div class="qsent">三年辛卯春二月，克鳳翔，攻洛陽、河中諸城，下之。</div>
+      <div class="qrow"><div class="who">Ⓐ rule <span class="verdict v-ok">TME đúng</span></div>
+        <div class="ents"><span class="ent ok">三年辛卯春二月<small>TME</small></span></div></div>
+      <div class="qrow"><div class="who">Ⓓ classical <span class="verdict v-bad">TME vụn</span></div>
+        <div class="ents"><span class="ent bad">三<small>NUM</small></span><span class="ent bad">年<small>TME</small></span><span class="ent bad">辛卯<small>NUM</small></span><span class="ent bad">春<small>TME</small></span><span class="ent ok">鳳翔<small>LOC</small></span><span class="ent ok">洛陽<small>LOC</small></span></div></div>
+      <div class="qrow"><div class="who">Hybrid <span class="verdict v-ok">gộp cả hai</span></div>
+        <div class="ents"><span class="ent ok">三年辛卯春二月<small>TME·Ⓐ</small></span><span class="ent ok">鳳翔<small>LOC·Ⓓ</small></span><span class="ent ok">洛陽<small>LOC·Ⓓ</small></span><span class="ent ok">河中<small>LOC·Ⓓ</small></span></div></div>
+    </div>
+    <p class="muted" style="font-size:14px">Bằng chứng rõ nhất: <b style="color:var(--ink)">model cổ văn Ⓓ thắng PER/LOC</b> (tên Mông Cổ), <b style="color:var(--ink)">luật Ⓐ thắng TME/NUM</b>, và <b style="color:var(--ink)">Hybrid gộp được cả hai</b>. Ⓓ còn bổ sung hàng loạt tên phiên âm mà gazetteer bỏ sót (<span class="han">脫奔咩哩犍 · 博寒葛答黑 · 斡難河</span>) → recall tăng mạnh.</p>
+  </section>
+
+  <!-- §6 -->
+  <section id="chot">
+    <h2><span class="no">§6</span> Kết luận &amp; khuyến nghị chốt</h2>
+    <ul class="clean">
+      <li><b>Tách câu → Rule-based ①.</b></li>
+      <li><b>NER → Hybrid Ⓓ+Ⓐ:</b> <span class="han">roberta-classical-chinese</span> lo <b>PER/LOC</b> ⊕ gazetteer/regex lo <b>TME/NUM/TITLE/ORG</b>. Train thẳng trên cổ văn phồn thể, <b>không cần OpenCC</b>, bắt được tên Mông Cổ phiên âm.</li>
+      <li><b>Ⓑ / Ⓒ hiện đại</b> → giữ làm đối chứng “công cụ sai miền” trong report.</li>
+      <li><b>Ⓔ guwen-ner</b> → bộ dò danh từ riêng để tăng recall / soát sót.</li>
+    </ul>
+  </section>
+
+  <!-- §7 -->
+  <section id="tiep">
+    <h2><span class="no">§7</span> Việc cần làm tiếp (để có điểm chính xác thật)</h2>
+    <ol class="steps">
+      <li><b>Xây GOLD SET 300–500 câu (WP3)</b> — 2 người gán tay theo guideline, đo Cohen’s κ. <span class="muted">Điều kiện DUY NHẤT để có P/R/F1 chính thức.</span></li>
+      <li><b>Chạy lại seqeval</b> trên gold lớn — code đã sẵn, chỉ thay file.</li>
+      <li><b>Bản final:</b> fine-tune <span class="han">GuwenBERT/SikuBERT</span> trên gold + GuNER2023 (vẫn giữ TME/NUM từ luật). Hybrid Ⓓ+Ⓐ là baseline mạnh để đo mức cải thiện.</li>
+    </ol>
+    <h3>Chạy lại thực nghiệm</h3>
+    <pre><span class="c"># từ experiment/src</span>
+python run_pipeline.py   <span class="c"># clean → tách câu → NER (Ⓐ,Ⓑ) → BENCHMARK_REPORT.md</span>
+python bench_tools.py    <span class="c"># so sánh 5 công cụ Ⓐ..Ⓔ → TOOLS_COMPARISON.md</span>
+python run_hybrid.py     <span class="c"># Hybrid Ⓓ+Ⓐ + seqeval → _ner.hybrid.json</span>
+python eval_demo.py      <span class="c"># minh hoạ seqeval trên gold 7 câu</span></pre>
+  </section>
+
+  <div class="foot">
+    <span>Đồ án HCH — Ngữ liệu chữ Hán, lịch sử Trung Quốc phong kiến</span>
+    <span>Báo cáo chi tiết: TOOLS_COMPARISON.md · HYBRID_REPORT.md</span>
+  </div>
+
+</div>

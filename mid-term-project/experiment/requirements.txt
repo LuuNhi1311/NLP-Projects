@@ -1,0 +1,9 @@
+# Thực nghiệm tách câu + NER cho văn ngôn 文言文 (phồn thể)
+# Python >= 3.10
+regex>=2024.0
+opencc-python-reimplemented>=0.1.7
+stanza>=1.8            # tách câu / tokenize cổ văn (model 'lzh')
+transformers>=4.40     # NER bằng BERT token-classification
+torch>=2.0             # backend cho transformers (CPU là đủ cho tập sample)
+seqeval>=1.2           # đo P/R/F1 khi có gold
+pandas>=2.0            # (tuỳ chọn) xử lý bảng

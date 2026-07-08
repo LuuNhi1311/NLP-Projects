@@ -1,0 +1,287 @@
+<title>Benchmark HCH — Tách câu &amp; NER trên 元史</title>
+<style>
+  :root{
+    --ground:#F4F3EF; --panel:#FBFAF7; --ink:#20242B; --muted:#5E6672;
+    --rule:#DEDBD3; --rule-strong:#C9C5BA;
+    --indigo:#33415C; --cinnabar:#B23A2E;
+    --good:#2E7D57; --warn:#9A6B15; --bad:#B23A2E;
+    --good-bg:#E7F0EA; --warn-bg:#F5EDDA; --bad-bg:#F3E3E0;
+    --chip:#ECEAE3;
+    --shadow:0 1px 2px rgba(20,24,30,.05),0 8px 24px rgba(20,24,30,.05);
+    --maxw:900px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#14171C; --panel:#1B1F26; --ink:#E7E5DF; --muted:#9AA1AC;
+      --rule:#2A2F38; --rule-strong:#3A414C;
+      --indigo:#9FB1D4; --cinnabar:#E07B6D;
+      --good:#67C79A; --warn:#D9AE5E; --bad:#E07B6D;
+      --good-bg:#18241E; --warn-bg:#25200F; --bad-bg:#281713;
+      --chip:#252A33;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#F4F3EF; --panel:#FBFAF7; --ink:#20242B; --muted:#5E6672;
+    --rule:#DEDBD3; --rule-strong:#C9C5BA; --indigo:#33415C; --cinnabar:#B23A2E;
+    --good:#2E7D57; --warn:#9A6B15; --bad:#B23A2E;
+    --good-bg:#E7F0EA; --warn-bg:#F5EDDA; --bad-bg:#F3E3E0; --chip:#ECEAE3;
+  }
+  :root[data-theme="dark"]{
+    --ground:#14171C; --panel:#1B1F26; --ink:#E7E5DF; --muted:#9AA1AC;
+    --rule:#2A2F38; --rule-strong:#3A414C; --indigo:#9FB1D4; --cinnabar:#E07B6D;
+    --good:#67C79A; --warn:#D9AE5E; --bad:#E07B6D;
+    --good-bg:#18241E; --warn-bg:#25200F; --bad-bg:#281713; --chip:#252A33;
+  }
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans CJK SC","Microsoft YaHei",sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .serif{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Songti SC","SimSun",serif;}
+  .mono{font-family:"SF Mono","Cascadia Code",Consolas,"Liberation Mono",monospace;}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:clamp(20px,5vw,56px) clamp(16px,4vw,32px);}
+
+  /* header */
+  header{border-bottom:2px solid var(--rule-strong);padding-bottom:22px;margin-bottom:8px;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--indigo);font-weight:600;}
+  h1{font-size:clamp(26px,4.5vw,38px);line-height:1.15;margin:.35em 0 .15em;text-wrap:balance;letter-spacing:-.01em;}
+  h1 .zh{font-family:"Songti SC","SimSun","Noto Serif CJK SC",serif;}
+  .sub{color:var(--muted);font-size:15.5px;max-width:62ch;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+  .chip{background:var(--chip);border:1px solid var(--rule);border-radius:999px;
+    padding:4px 11px;font-size:12.5px;color:var(--ink);display:inline-flex;gap:6px;align-items:center;}
+  .chip b{color:var(--indigo);font-weight:600;}
+
+  section{margin-top:38px;}
+  h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+    font-weight:700;margin:0 0 14px;display:flex;align-items:center;gap:10px;}
+  h2::before{content:"";width:16px;height:2px;background:var(--cinnabar);display:inline-block;}
+  h3{font-size:18px;margin:0 0 4px;}
+
+  .card{background:var(--panel);border:1px solid var(--rule);border-radius:12px;
+    box-shadow:var(--shadow);padding:20px 22px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr;}}
+
+  /* pipeline flow */
+  .flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:10px;}
+  .step{flex:1 1 130px;background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:12px 14px;}
+  .step .n{font-size:11px;color:var(--muted);letter-spacing:.1em;}
+  .step .t{font-weight:600;margin-top:2px;}
+  .step .tool{font-size:12.5px;color:var(--indigo);margin-top:6px;}
+  .arrow{align-self:center;color:var(--rule-strong);font-size:20px;}
+  @media(max-width:680px){.arrow{display:none;}}
+
+  /* tables */
+  .tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:12px;}
+  table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums;background:var(--panel);}
+  th,td{padding:10px 13px;text-align:right;border-bottom:1px solid var(--rule);white-space:nowrap;}
+  th:first-child,td:first-child{text-align:left;}
+  thead th{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
+    font-weight:700;background:var(--ground);position:sticky;top:0;}
+  tbody tr:last-child td{border-bottom:none;}
+  .grp td{background:var(--ground);font-weight:600;color:var(--indigo);font-size:12px;
+    letter-spacing:.03em;text-transform:uppercase;}
+  td.zh{font-family:"Songti SC","SimSun",serif;}
+  .win{color:var(--good);font-weight:700;}
+  .lose{color:var(--bad);}
+  .dim{color:var(--muted);}
+
+  /* verdict pills */
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:999px;
+    font-size:12px;font-weight:600;border:1px solid transparent;}
+  .pill.keep{background:var(--good-bg);color:var(--good);border-color:color-mix(in oklab,var(--good) 30%,transparent);}
+  .pill.drop{background:var(--bad-bg);color:var(--bad);border-color:color-mix(in oklab,var(--bad) 30%,transparent);}
+  .pill.mix{background:var(--warn-bg);color:var(--warn);border-color:color-mix(in oklab,var(--warn) 30%,transparent);}
+
+  /* stat tiles */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media(max-width:680px){.tiles{grid-template-columns:repeat(2,1fr);}}
+  .tile{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:14px 15px;}
+  .tile .k{font-size:11.5px;color:var(--muted);letter-spacing:.04em;}
+  .tile .v{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-top:3px;}
+  .tile .v small{font-size:14px;font-weight:600;color:var(--muted);}
+
+  /* insight callout */
+  .note{border-left:3px solid var(--cinnabar);padding:6px 0 6px 16px;margin:14px 0 0;color:var(--ink);}
+  .note b{color:var(--cinnabar);}
+  .zhq{font-family:"Songti SC","SimSun",serif;}
+
+  /* decision block */
+  .decide{background:var(--panel);border:1px solid var(--rule);border-top:3px solid var(--cinnabar);
+    border-radius:12px;padding:22px 24px;box-shadow:var(--shadow);}
+  .decide h3{color:var(--cinnabar);letter-spacing:.02em;}
+  .decide ul{margin:12px 0 0;padding-left:0;list-style:none;display:grid;gap:12px;}
+  .decide li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;}
+  .decide li .lab{min-width:104px;}
+
+  .files{display:grid;gap:7px;}
+  .file{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+    padding:9px 0;border-bottom:1px dashed var(--rule);}
+  .file:last-child{border-bottom:none;}
+  .file code{font-size:13px;color:var(--indigo);}
+  .file .d{font-size:13.5px;color:var(--muted);}
+
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--rule);
+    color:var(--muted);font-size:12.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  @media (prefers-reduced-motion:no-preference){
+    section,header{animation:rise .5s cubic-bezier(.2,.7,.2,1) both;}
+    section:nth-child(2){animation-delay:.04s;} section:nth-child(3){animation-delay:.08s;}
+    @keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Đồ án HCH · Thực nghiệm tập sample</div>
+    <h1 class="serif">Tách câu &amp; NER trên văn ngôn <span class="zh">文言文</span></h1>
+    <p class="sub">Benchmark 2 phương pháp cho mỗi tác vụ, chạy trên 2 chương
+      <span class="zhq">元史</span> (Nguyên Sử, phồn thể) để nhóm <b>chốt phương pháp</b>.
+      Mục tiêu: minh hoạ <em>cách áp dụng công cụ</em> — không nhắm độ chính xác tuyệt đối.</p>
+    <div class="chips">
+      <span class="chip"><b>Dữ liệu</b> 元史 卷001 太祖 · 卷002 太宗/定宗</span>
+      <span class="chip"><b>Sau cleaning</b> 597 câu · 14.596 ký tự</span>
+      <span class="chip"><b>Nhãn NER</b> PER · LOC · ORG · TITLE · TME · NUM</span>
+      <span class="chip"><b>Chạy</b> CPU · offline-capable</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>Pipeline &amp; công cụ</h2>
+    <div class="flow">
+      <div class="step"><div class="n">01 · CLEANING</div><div class="t">Làm sạch</div>
+        <div class="tool">Python + regex</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">02 · SEGMENT</div><div class="t">Tách câu</div>
+        <div class="tool">Rule-based · Stanza lzh</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">03 · NER</div><div class="t">Gán thực thể</div>
+        <div class="tool">Gazetteer · BERT+OpenCC</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">04 · EVAL</div><div class="t">Đánh giá</div>
+        <div class="tool">seqeval P/R/F1</div></div>
+    </div>
+    <p class="note"><b>Cleaning</b> tách chương theo <code>#&nbsp;卷</code>, loại
+      <span class="zhq">姊妹计划</span>, cước chú <code>↑</code>, tham chiếu <code>[n]</code>,
+      public domain; tách 4 chú biên tập <span class="zhq">〈…〉</span> ra file riêng (giữ lại, không mất).</p>
+  </section>
+
+  <section>
+    <h2>Tác vụ 1 — Tách câu</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Chương / Phương pháp</th><th>Số câu</th><th>Dài TB</th>
+          <th>Thời gian</th><th>Đồng thuận ranh giới</th><th>Kết luận</th></tr></thead>
+        <tbody>
+          <tr class="grp"><td colspan="6">卷001 (太祖本紀) — 131 đoạn</td></tr>
+          <tr><td>[A] Rule-based (regex)</td><td class="win">404</td><td>26.5</td>
+            <td class="mono">0.004s</td><td rowspan="2" style="vertical-align:middle">Jaccard <b>0.037</b><br><span class="dim">rule⊂stanza = 0.165</span></td>
+            <td rowspan="2" style="vertical-align:middle"><span class="pill keep">✓ Chọn A</span></td></tr>
+          <tr><td>[B] Stanza <span class="mono">lzh</span></td><td>1114</td><td>9.6</td><td class="mono">4.4s</td></tr>
+          <tr class="grp"><td colspan="6">卷002 (太宗·定宗本紀) — 90 đoạn</td></tr>
+          <tr><td>[A] Rule-based (regex)</td><td class="win">193</td><td>20.2</td>
+            <td class="mono">0.003s</td><td rowspan="2" style="vertical-align:middle">Jaccard <b>0.065</b><br><span class="dim">rule⊂stanza = 0.233</span></td>
+            <td rowspan="2" style="vertical-align:middle"><span class="pill keep">✓ Chọn A</span></td></tr>
+          <tr><td>[B] Stanza <span class="mono">lzh</span></td><td>383</td><td>10.2</td><td class="mono">1.7s</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Text đã có sẵn dấu câu <span class="zhq">。！？</span> → rule-based cắt đúng
+      định nghĩa "câu". Stanza <span class="mono">lzh</span> cắt ở mức <b>cụm/mệnh đề</b>, thậm chí
+      cắt giữa câu và <b>nhập qua dấu 。</b>:
+      <span class="zhq">「海都歿，子</span> | <span class="zhq">拜姓忽兒嗣。拜姓</span> | <span class="zhq">忽兒歿…」</span>
+      → chỉ ~17–23% ranh giới trùng, <b>không hợp cho tác vụ này</b>.</p>
+  </section>
+
+  <section>
+    <h2>Tác vụ 2 — NER · số thực thể theo nhãn</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Chương / Phương pháp</th><th>PER</th><th>LOC</th><th>ORG</th>
+          <th>TITLE</th><th>TME</th><th>NUM</th><th>Σ</th></tr></thead>
+        <tbody>
+          <tr class="grp"><td colspan="8">卷001</td></tr>
+          <tr><td>[A] Gazetteer + regex</td><td>182</td><td>220</td><td>34</td><td>80</td>
+            <td class="win">81</td><td class="win">103</td><td>700</td></tr>
+          <tr><td>[B] BERT (cluener) + OpenCC</td><td class="win">405</td><td class="win">314</td><td>7</td><td>77</td>
+            <td class="lose">0</td><td class="lose">0</td><td>803</td></tr>
+          <tr class="grp"><td colspan="8">卷002</td></tr>
+          <tr><td>[A] Gazetteer + regex</td><td>40</td><td>107</td><td>13</td><td>42</td>
+            <td class="win">87</td><td class="win">72</td><td>361</td></tr>
+          <tr><td>[B] BERT (cluener) + OpenCC</td><td class="win">137</td><td class="win">152</td><td>2</td><td>33</td>
+            <td class="lose">0</td><td class="lose">0</td><td>324</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Khớp chính xác span+nhãn giữa [A] và [B]: <b>163</b> (卷001) / <b>68</b> (卷002).
+      [B] không có nhãn <b>TME/NUM</b> (CLUENER không định nghĩa) → hai công cụ <b>bổ sung nhau</b>.</p>
+  </section>
+
+  <section>
+    <h2>Đánh giá định lượng — seqeval trên gold mẫu</h2>
+    <div class="grid2">
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>[A] Gazetteer+regex</th><th>P</th><th>R</th><th>F1</th></tr></thead>
+          <tbody>
+            <tr><td>PER</td><td class="win">1.000</td><td>0.375</td><td>0.545</td></tr>
+            <tr><td>LOC</td><td class="lose">0.000</td><td>0.000</td><td>0.000</td></tr>
+            <tr><td>TME</td><td>0.667</td><td>0.667</td><td>0.667</td></tr>
+            <tr><td class="dim">micro avg</td><td class="dim">0.556</td><td class="dim">0.333</td><td class="dim">0.417</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>[B] BERT + OpenCC</th><th>P</th><th>R</th><th>F1</th></tr></thead>
+          <tbody>
+            <tr><td>PER</td><td class="lose">0.250</td><td>0.125</td><td>0.167</td></tr>
+            <tr><td>LOC</td><td class="win">0.750</td><td>0.750</td><td>0.750</td></tr>
+            <tr><td>TME</td><td class="lose">0.000</td><td>0.000</td><td>0.000</td></tr>
+            <tr><td class="dim">micro avg</td><td class="dim">0.500</td><td class="dim">0.267</td><td class="dim">0.348</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="note"><b>Gold mẫu 7 câu</b> — chỉ minh hoạ <em>cơ chế đo</em>, chưa phải kết luận
+      chính xác (final: gold 300–500 câu, 2 người gán, đo Cohen's κ). Đọc rõ luận điểm:
+      [A] chắc ở <b>PER-từ-điển &amp; TME</b>; [B] mạnh <b>LOC</b>, yếu tên Mông Cổ, thiếu TME.</p>
+  </section>
+
+  <section>
+    <h2>Chốt phương pháp — đề xuất cho buổi họp</h2>
+    <div class="decide">
+      <h3>Khuyến nghị</h3>
+      <ul>
+        <li><span class="lab"><span class="pill keep">Tách câu</span></span>
+          <span><b>Rule-based (regex).</b> Nhanh (&lt;5ms/chương), khớp đúng format
+          <code>_seg.tsv</code>. <span class="pill drop">Loại</span> Stanza <span class="mono">lzh</span>
+          cho seg (cắt loạn) — vẫn giữ để tokenize/POS nếu cần sau.</span></li>
+        <li><span class="lab"><span class="pill mix">NER</span></span>
+          <span><b>Hợp nhất (hybrid).</b> Lấy <b>TME · NUM</b> từ luật/gazetteer;
+          lấy <b>PER · LOC · ORG</b> từ model. Bản final: <b>fine-tune encoder cổ văn</b>
+          (GuwenBERT/SikuBERT) trên gold để bù recall tên Mông Cổ.</span></li>
+        <li><span class="lab"><span class="pill keep">繁→简</span></span>
+          <span><b>OpenCC theo từng ký tự</b> (giữ căn lề 1-1) trước khi infer model giản thể,
+          rồi map nhãn ngược về phồn thể — offset chuẩn xác.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>File sinh ra mỗi chương</h2>
+    <div class="card files">
+      <div class="file"><code>_seg.tsv</code><span class="d">Tách câu canonical (rule-based) — <span class="mono">id⇥câu</span></span></div>
+      <div class="file"><code>_seg.stanza.tsv</code><span class="d">Biến thể Stanza — để đối chứng</span></div>
+      <div class="file"><code>_ner.json</code><span class="d">NER canonical (gazetteer) — đủ 6 nhãn</span></div>
+      <div class="file"><code>_ner.model.json</code><span class="d">Biến thể BERT+OpenCC — để đối chứng</span></div>
+      <div class="file"><code>_annotations.txt</code><span class="d">Chú giải 〈…〉 tách khỏi chính văn, giữ lại</span></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Đồ án HCH · Ngữ liệu đơn ngữ chữ Hán · lịch sử TQ phong kiến</span>
+    <span class="mono">clean · segment · ner · benchmark · eval</span>
+  </footer>
+</div>

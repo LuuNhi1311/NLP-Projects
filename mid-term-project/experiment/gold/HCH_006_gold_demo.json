@@ -1,0 +1,19 @@
+{
+  "_note": "GOLD MẪU MINH HOẠ (7 câu) — chỉ để demo CÁCH đo P/R/F1 bằng seqeval. KHÔNG phải gold chính thức. Bản final cần 300-500 câu, 2 người gán, đo Cohen's kappa. Thực thể gán theo text; eval_demo.py tự tính offset.",
+  "sentences": [
+    { "sentence_id": "HCH_006_001_000004", "sentence": "阿蘭驚覺，遂有娠，產一子，即孛端叉兒也。",
+      "entities": [ {"text": "阿蘭", "label": "PER"}, {"text": "孛端叉兒", "label": "PER"} ] },
+    { "sentence_id": "HCH_006_001_000042", "sentence": "海都歿，子拜姓忽兒嗣。",
+      "entities": [ {"text": "海都", "label": "PER"}, {"text": "拜姓忽兒", "label": "PER"} ] },
+    { "sentence_id": "HCH_006_001_000044", "sentence": "敦必乃歿，子葛不律寒嗣。",
+      "entities": [ {"text": "敦必乃", "label": "PER"}, {"text": "葛不律寒", "label": "PER"} ] },
+    { "sentence_id": "HCH_006_001_000046", "sentence": "八哩丹歿，子也速該嗣，并吞諸部落，勢愈盛大。",
+      "entities": [ {"text": "八哩丹", "label": "PER"}, {"text": "也速該", "label": "PER"} ] },
+    { "sentence_id": "HCH_006_002_000005", "sentence": "元年己丑夏，至忽魯班雪不只之地。",
+      "entities": [ {"text": "元年己丑夏", "label": "TME"}, {"text": "忽魯班雪不只", "label": "LOC"} ] },
+    { "sentence_id": "HCH_006_002_000019", "sentence": "二年庚寅春正月，詔自今以前事勿問。",
+      "entities": [ {"text": "二年庚寅春正月", "label": "TME"} ] },
+    { "sentence_id": "HCH_006_002_000029", "sentence": "三年辛卯春二月，克鳳翔，攻洛陽、河中諸城，下之。",
+      "entities": [ {"text": "三年辛卯春二月", "label": "TME"}, {"text": "鳳翔", "label": "LOC"}, {"text": "洛陽", "label": "LOC"}, {"text": "河中", "label": "LOC"} ] }
+  ]
+}

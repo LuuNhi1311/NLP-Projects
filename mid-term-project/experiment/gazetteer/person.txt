@@ -1,0 +1,43 @@
+# PER — nhân danh hay gặp (miếu hiệu + tên phiên âm Mông Cổ trong 元史 卷001-002).
+# Đây là gazetteer MẪU, nhóm mở rộng dần từ corpus. # = chú thích.
+# --- miếu hiệu / tôn hiệu hoàng đế ---
+太祖
+太宗
+定宗
+睿宗
+世祖
+憲宗
+# --- tên hãn / hoàng đế Mông Cổ (phiên âm) ---
+鐵木真
+成吉思
+成吉思皇帝
+窩闊台
+拖雷
+貴由
+蒙哥
+忽必烈
+# --- tổ tiên / nhân vật trong 太祖本紀 ---
+孛端叉兒
+阿蘭果火
+也速該
+海都
+納真
+莫挐倫
+札木合
+汪罕
+脫里
+王罕
+桑昆
+札阿紺孛
+別里古台
+薛徹別吉
+術赤
+察合台
+# --- công thần ---
+木華黎
+博爾朮
+博爾忽
+赤老溫
+速不台
+哲別
+者勒蔑
